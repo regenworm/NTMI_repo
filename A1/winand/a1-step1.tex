@@ -1,12 +1,16 @@
-\documentclass[10pt,a4paper]{article}
+\documentclass[a4paper, 10pt]{article}
+\usepackage[margin=1in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{subfig}
 \setlength{\parindent}{0pt}
+
 \title{NTMI - Project Exercises - Part A}
 \author{Alex Khawalid (10634207)\\
-Wessel Kleinsma (10172432)\\
+Wessel Klijnsma (10172432)\\
 Winand Renkema (10643478)\\
 }
 \renewcommand{\thesection}{Step \arabic{section}:}
@@ -16,9 +20,18 @@ Winand Renkema (10643478)\\
 
 \section{Extracting n-gram statistics}
 
-\subsection{Unigrams}
-Frequencies for $n = 1$ and $m = 10$:\\
+\subsection{Introduction}
+This is a report about the first assignment of the Natural Language Models and Interfaces. Its goals is to build a program that is able to create tables of n-gram frequencies based on a corpus. N-grams are word sequences of length n that form the basis of many probabilistic language models such as Markov Models
 
+\subsection{Method}
+The program is written in the Python programming language. For this assignment the novel Emma by Jane Austen will be used as a corpus. However other corpi can be used as input of the program.
+The approach used to create the program is to loop through each word of every sentence in the corpus. For each word the next n-1 words are taking into account. If the sequence occurs in the table its frequency is incremented by 1. If not, a new table entry is created.
+The frequency table is represented by a hash-table datastructure, where the n-gram is the key and the frequency its value.
+In order to get the m most frequent n-grams, the hash-table is sorted on the frequencies and the first m elements of the array are the m most frequent n-grams. For this assignment the 10 most frequent n-grams are determined for n=1, n=2, and n=3. The results can be found in the results section.
+
+\subsection{Results}
+
+Frequencies for $n = 1$ and $m = 10$:\\
 \begin{tabular}{l l l}
 \textit{rank}&	\textit{unigram}	& \textit{frequency} \\
 1	&	the		& 20829 \\
@@ -33,9 +46,8 @@ Frequencies for $n = 1$ and $m = 10$:\\
 10	&	it		& 7573\\
 \end{tabular}\\
 \\
-The sum for $n = 1$ and $m = 10$ is $617091$.
+The sum for $n = 1$ and $m = 10$ is $617091$.\\
 
-\subsection{Bigrams}
 Frequencies for $n = 2$ and $m = 10$:\\
 
 \begin{tabular}{l l l}
@@ -52,10 +64,8 @@ Frequencies for $n = 2$ and $m = 10$:\\
 10	&	to her		&  964	\\ 
 \end{tabular}\\
 \\
-The sum for $n = 1$ and $m = 10$ is $617090$.
+The sum for $n = 1$ and $m = 10$ is $617090$.\\
 
-\newpage
-\subsection{Trigrams}
 Frequencies for $n = 3$ and $m = 10$:\\
 
 \begin{tabular}{l l l}
@@ -72,8 +82,13 @@ Frequencies for $n = 3$ and $m = 10$:\\
 10	&	could not be	&	 155 \\
 \end{tabular}\\
 \\
-The sum for $n = 3$ and $m = 10$ is $617089$.
+The sum for $n = 3$ and $m = 10$ is $617089$.\\
 
+The program can be run using the following commands:
 
+\texttt{./a1-step1 -corpus [path to corpus] -n [length of n-gram] -m [limit of the rank of the most frequent n-grams]}
+
+\subsection{Discussion}
+Looking at the results, one can see that the n-gram consist mostly of small, simple words such as determiners, pronouns and verbs like: be, could, would and have. Also signs of the effect of Zipf’s law are also present, ‘the’ (rank 1 for 1-grams) occurs about 2.75 times more often than ‘it’ (rank 10 for 1-grams).
 
 \end{document}

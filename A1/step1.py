@@ -92,11 +92,11 @@ class CorpusParser():
         top = sorted(self.ngramtable.iteritems(), key=lambda (k, v): (v, k), reverse=True)
 
         # get the top m results from the sorted ngrams
-        most_frequent = []
-        i = 0
-        while i < self.m:
-            most_frequent.append(top[i])
-            i += 1
+        most_frequent = top[0:self.m]
+        # i = 0
+        # while i < self.m:
+        #     most_frequent.append(top[i])
+        #     i += 1
 
         self.most_frequent = most_frequent
 

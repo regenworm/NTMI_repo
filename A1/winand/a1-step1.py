@@ -4,7 +4,7 @@
 
 	Authors:
 		Alex Khawalid (10634207)
-		Wessel Kleinsma (10172432)
+		Wessel Klijnsma (10172432)
 		Winand Renkema (10643478)
 '''
 
