@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python a1-step1.py $@
