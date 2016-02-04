@@ -5,11 +5,11 @@ NAMES:       Alex Khawalid
 STUDENT IDs: 10634207
 """
 
+
 # Parse ngrams
 class CorpusParser():
-
-    # set variables and 
-    def __init__(self,corpus_path,n,m):
+    # set variables and
+    def __init__(self, corpus_path, n, m):
         self.f = corpus_path
         self.m = m
         self.n = n
@@ -31,8 +31,8 @@ class CorpusParser():
         for ngram in self.most_frequent:
             print "%i.\t" % (i),
             print "ngram: " + ngram[0],
-            print "\tfrequency: %i" %(ngram[1])
-            i+=1
+            print "\tfrequency: %i" % (ngram[1])
+            i += 1
 
     # read unigrams from file, put in table
     def read_uni(self):
@@ -43,7 +43,6 @@ class CorpusParser():
                         self.ngramtable[words] += 1
                     else:
                         self.ngramtable[words] = 1
-
 
     def read_multi(self):
         # read ngrams bigger than unigrams
@@ -59,8 +58,8 @@ class CorpusParser():
             lines = f.readlines()
             totallines = len(lines)
             for line in lines:
-                print "%i out of %i" % (linenumber,totallines)
-                sys.stdout.write("\033[F")
+                # print "%i out of %i" % (linenumber, totallines)
+                # sys.stdout.write("\033[F")
 
                 splitlines = line.split()
                 for words in splitlines:
@@ -75,15 +74,14 @@ class CorpusParser():
                         # increment occurences of ngram
                         if ngramkey in self.ngramtable:
                             self.ngramtable[ngramkey] += 1
-                            i = self.n-1
+                            i = self.n - 1
                             ngramkey = ngramkey.split(' ', 1)[1]
                         # if new ngram add to table
                         else:
                             self.ngramtable[ngramkey] = 1
-                            i = self.n-1
+                            i = self.n - 1
                             ngramkey = ngramkey.split(' ', 1)[1]
                 linenumber += 1
-
 
     # get most frequent ngrams
     def get_most_frequent(self):
@@ -91,8 +89,8 @@ class CorpusParser():
         sys.stdout.write("\033[F")
 
         # sort ngrams
-        top =  sorted(self.ngramtable.iteritems(), key=lambda (k,v):(v,k), reverse=True)
-        
+        top = sorted(self.ngramtable.iteritems(), key=lambda (k, v): (v, k), reverse=True)
+
         # get the top m results from the sorted ngrams
         most_frequent = []
         i = 0
@@ -106,15 +104,13 @@ class CorpusParser():
         print "\x1b[2K"
 
 
-
 # main function
-def step1(corpus,n,m):
-
+def step1(corpus, n, m):
     print "========== NTMI Assignment A step 1, n=%i ==========" % (n)
     print "Corpus:\t%s" % (corpus)
     print "n:\t%i" % (n)
     print "m:\t%i" % (m)
-    parser = CorpusParser(corpus,n,m)
+    parser = CorpusParser(corpus, n, m)
     parser.start()
 
     print "Most frequent ngrams and their frequencies respectively:"
@@ -125,12 +121,12 @@ def step1(corpus,n,m):
     print "The sum of all frequencies is %i" % (sum(parser.ngramtable.values()))
     print "==================================================="
 
-def main(args):
 
+def main(args):
     if args.do_all:
-        step1('austen.txt',1,10)
-        step1('austen.txt',2,10)
-        step1('austen.txt',3,10)
+        step1('austen.txt', 1, 10)
+        step1('austen.txt', 2, 10)
+        step1('austen.txt', 3, 10)
     else:
         corpus = args.corpus
         n = args.n
@@ -142,13 +138,10 @@ def main(args):
             n = 3
         if not args.m:
             m = 10
-        step1(corpus,n,m)
-
-
+        step1(corpus, n, m)
 
 
 if __name__ == '__main__':
-
     import sys
     import argparse
 
