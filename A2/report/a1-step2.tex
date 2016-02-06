@@ -1,0 +1,62 @@
+\documentclass[a4paper, 10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{subfig}
+\setlength{\parindent}{0pt}
+
+\title{NTMI - Project Exercises - Part A}
+\author{Alex Khawalid (10634207)\\
+Wessel Klijnsma (10172432)\\
+Winand Renkema (10643478)\\
+}
+\renewcommand{\thesection}{Step \arabic{section}:}
+\renewcommand{\thesubsection}{\arabic{subsection}}
+\begin{document}
+\maketitle
+
+\subsection*{1.}
+\begin{tabular}{l l l}
+\textit{rank}&	\textit{trigram}	& \textit{frequency} \\
+1	&	[END] [START]	& 8760\\
+2	&	of the			& 2507\\
+3	&	to be			& 2232\\
+4	&	in the			& 1917\\
+5	&	I am			& 1365\\
+6	&	of her			& 1264\\
+7	&	to the			& 1142\\
+8	&	it was			& 1010\\
+9	&	had been		& 995\\
+10	&	she had			& 978\\
+\end{tabular}
+
+\subsection*{2.}
+\begin{tabular}{l l l}
+\textit{rank}&	\textit{trigram}	& \textit{P} \\
+1	&	Emma doing just			&	 $1.0$\\
+2	&	pleasant society again	&	 $0.5$\\
+3	&	two daughters of		&	 $0.4$\\
+4	&	being seen or			&	 $\sim 0.3333$\\
+5	&	[START] I am			&	 $\sim 0.1939$\\
+6	&	which she could			&	 $\sim 0.0741$\\
+7	&	had lost [END]			&	 $\sim 0.0769$\\
+8	&	her usual good			&	 $\sim 0.0357$\\
+9	&	could never love		&	 $\sim 0.0179$\\
+10	&	depended on him			&	 $0$\\
+\end{tabular}
+
+\subsection*{4.}
+\begin{tabular}{l l l}
+1	&	``[START] I do not know what may be your opinion [END]'' & $\sim 3.661 \cdot 10^{-15}$\\
+2	&	``[START] I do not know what your opinion may be [END]'' & $\sim 3.222 \cdot 10^{-15}$\\
+\end{tabular}
+
+
+\begin{tabular}{l l l}
+1	& ``[START] I do not know [END]''	& $\sim 9.174 \cdot 10^{-7}$ \\
+2	& ``[START] I know not do [END]''	& $\sim 0.0534 \cdot 10^{-7}$\\
+\end{tabular}
+\end{document}
