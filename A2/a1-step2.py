@@ -1,3 +1,13 @@
+'''
+	NTMI - Project Exercises
+	Part a, step 2: Extracting ngram statistics
+
+	Authors:
+		Alex Khawalid (10634207)
+		Wessel Klijnsma (10172432)
+		Winand Renkema (10643478)
+'''
+
 import sys, argparse, re
 from collections import defaultdict
 
