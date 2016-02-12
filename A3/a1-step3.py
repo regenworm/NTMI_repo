@@ -144,7 +144,7 @@ if smoothing == 'add1':
 	smoothing = ('add1', [len(dictionary) 
 						for dictionary in n_gram_dictionaries]);
 elif smoothing == 'gt':
-	smoothing = ('gt', [len(n_gram_dictionaries[n])] + \
+	smoothing = ('gt', [ sum(n_gram_dictionaries[n].values())] + \
 		# Computing frequencies of n-grams. The first case is the total number
 		# of n-grams (hence N).
 		[	len([i for i in n_gram_dictionaries[n].values() if i == frequency])
