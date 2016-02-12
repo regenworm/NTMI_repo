@@ -13,9 +13,6 @@ from collections import defaultdict
 
 # Read n-grams from file per line
 def read_n_grams_per_line (file_handle, n):
-	
-	# Todo: Not sure of START END also needs to appear here.
-	
 	# Split text in file by one or more occurrences of newline
 	lines = re.split('[\n]+', file_handle.read());
 	# Set pointer to begin of file.
@@ -53,28 +50,42 @@ def n_grams_to_dictionary(n_grams):
 	for n_gram in n_grams: dictionary[n_gram] += 1
 	return dictionary
 
-def conditional_probability(sequence, dictionary, dictionary_minus,
-	smoothing):
-	history = sequence[:sequence.rfind(' ')]
-	
-	if smoothing == 'add1' and dictionary[sequence] < 6:
-		V = len(dictionary);
-		return (
-			(dictionary[sequence] + 1) / 
-			(dictionary_minus[history] + V + 0.0)
-		)
-		
-	
-	if dictionary_minus[history] == 0:
+def conditional_probability(sequence, n_gram_dictionaries, n,
+	(method, lengths_or_frequencies)):
+
+	history = sequence[:sequence.rfind(' ')];
+	if not method == 'no' and n_gram_dictionaries[n][sequence] <= 5:
+		# In case smoothing method is set to add1
+		if method == 'add1':
+			return (
+				(n_gram_dictionaries[n][sequence] + 1) / 
+				(n_gram_dictionaries[n-1][history] + lengths_or_frequencies[n] 
+				+ 0.0)
+			)
+		elif method == 'gt':
+			# Threshold 
+			k = 5
+			c = n_gram_dictionaries[n][sequence]
+			N = lengths_or_frequencies;
+			if c == 0:	
+				return N[1] / (N[0] + 0.0);
+			elif c <= k:
+				numerator = ((c + 1)*(N[c+1] / (N[c] + 0.0))) - \
+					(c*( (k+1)*N[k+1] )/ (N[1] + 0.0))
+				denominator = 1 - ( ( (k+1) * N[k+1] ) / ( N[1] + 0.0) )
+				return numerator / (denominator + 0.0)
+			
+	# No smoothing is done. 
+	if n_gram_dictionaries[n-1][history] == 0:
 		return 0
 	else:
-		return (dictionary[sequence] / (dictionary_minus[history] + 0.0))
+		return (n_gram_dictionaries[n][sequence] / 
+			(n_gram_dictionaries[n-1][history] + 0.0))
 
 # Compute probability of a sequence of words.
-def sequence_probability(sequence, n, n_gram_dictionaries,
-	smoothing):
+def sequence_probability(sequence, n, n_gram_dictionaries, smoothing):
 	# Splits sequence into words by splitting on space.
-	words = sequence.split(' ');
+	words = re.split('[\n\s]+', sequence);
 
 	probability = 1.0;
 	# Computing initial part of formula, ignore first element because
@@ -82,8 +93,7 @@ def sequence_probability(sequence, n, n_gram_dictionaries,
 	for ngram in [' '.join(words[0:i]) for i in range(1, n)][1:]:
 		s = ngram.count(' ')+1;
 		probability *= conditional_probability (
-			ngram, n_gram_dictionaries[s], n_gram_dictionaries[s-1],
-			smoothing
+			ngram, n_gram_dictionaries, n, smoothing
 		);
 		
 	# Computing remaining part of formula.
@@ -91,22 +101,10 @@ def sequence_probability(sequence, n, n_gram_dictionaries,
 			for i in range(0, len(words)) if (len(words) - i) >= n
 	]:
 		probability *= conditional_probability(
-			ngram, n_gram_dictionaries[n], n_gram_dictionaries[n-1],
-			smoothing
+			ngram, n_gram_dictionaries, n, smoothing
 		);
 	
 	return probability;
-
-# Permutes list of words and return tuples of permutation and probability.
-def permute_words(words, n, n_gram_dictionaries):
-	import itertools
-	permutations = []
-	for permutation in list(itertools.permutations(words)):
-		line = '[START] ' + ' '.join(permutation) + ' [END]';
-		permutations.append ((line, 
-			sequence_probability(line, n, n_gram_dictionaries)))
-		
-	return permutations
 		
 # Process command line arguments
 parser = argparse.ArgumentParser(description='NTMI')
@@ -120,13 +118,6 @@ parser.add_argument('-smoothing', action='store', dest='smoothing',
 	choices=['no', 'add1', 'gt'], default='no')
 parser.add_argument('-m', action='store', dest="m", type=int, required=False,
 	default=10)
-parser.add_argument('-conditional-prob-file', action='store', 
-	dest='conditional_probability', type=argparse.FileType('r'), required=False)
-parser.add_argument('-sequence-prob-file', action='store', 
-	dest='sequence_probability', type=argparse.FileType('r'),
-	required=False)
-parser.add_argument('-scored-permutations', action='store', 
-	dest='scored_permutations', type=str, required=False)
 parameters = parser.parse_args(sys.argv[1:])
 
 # File handle for training corpus
@@ -139,12 +130,6 @@ n				= parameters.n
 smoothing		= parameters.smoothing
 # Number of results to output
 m				= parameters.m # Remove?
-# File handle for conditional file
-cp_file	= parameters.conditional_probability
-# File handle for sequence file
-sq_file	= parameters.sequence_probability
-# Scoring boolean
-scored = parameters.scored_permutations
 
 # Creating required n-gram dictionaries based on given n. The default value is 
 # a empty dict, so the index of a dict corresponds to the related n value.
@@ -154,14 +139,26 @@ for i in range(1, n+1):
 		n_grams_to_dictionary(read_n_grams_per_paragraph(training_file, i))
 	)
 
-lines = []
-for line in test_file.readlines():
-	if len(line) > 1:
-		lines.append( 
-			('[START] ' + line[:-1] + ' [END]', 
-			sequence_probability(line, n, n_gram_dictionaries, smoothing))
-		)
+# Creating vocabulary count or n-gram frequencies
+if smoothing == 'add1':
+	smoothing = ('add1', [len(dictionary) 
+						for dictionary in n_gram_dictionaries]);
+elif smoothing == 'gt':
+	smoothing = ('gt', [len(n_gram_dictionaries[n])] + \
+		# Computing frequencies of n-grams. The first case is the total number
+		# of n-grams (hence N).
+		[	len([i for i in n_gram_dictionaries[n].values() if i == frequency])
+			for frequency in range(1, 7)	] # For range 1 to 6
+		);
 
+# Computing probability for lines in test corpus.
+lines = [	('[START] ' + line[:-1] + ' [END]', 
+			sequence_probability(line, n, n_gram_dictionaries, smoothing)
+			)
+			for line in re.split('[\n]+', test_file.read())
+		];
+
+# Printing percentage of zero probabilities.
 print "Percentage of zero probabilities: " + str(round(
 	(len([(w, p) for (w, p) in lines if p == 0]) / (len(lines) + 0.0)) 
 	* 100, 2) )
@@ -171,5 +168,3 @@ print "Five first occurences of zero probability: "
 for line in [(w, p) for (w, p) in 
 	sorted(lines, key=lambda x: x[1], reverse=True)	if p == 0][:5]:
 		print line;
-
-print lines
