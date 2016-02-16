@@ -102,7 +102,7 @@ def sequence_probability(sequence, n, n_gram_dictionaries, smoothing):
     for ngram in [' '.join(words[i:(i + n)])
                   for i in range(0, len(words)) if (len(words) - i) >= n
                   ]:
-        probability *= conditional_probability(
+    	probability *= conditional_probability(
             ngram, n_gram_dictionaries, n, smoothing
         )
 
@@ -161,12 +161,14 @@ lines = [(seq, sequence_probability(seq, n, n_gram_dictionaries, smoothing))
         ]
 
 # Printing percentage of zero probabilities.
-print "Percentage of zero probabilities: " + str(round(
-    (len([(w, p) for (w, p) in lines if p == 0]) / (len(lines) + 0.0))
-    * 100, 2))
+zero = round(
+		(len([(w, p) for (w, p) in lines if p == 0]) / (len(lines) + 0.0))
+    	* 100, 2)
+print 'Sequences with zero probability: ' + str(zero) + '%'
 
-# Print first five occurences of zero probability
-print "Five first occurences of zero probability: "
-for line in [(w, p) for (w, p) in
+if zero > 0:
+    # Print first five occurences of zero probability
+    print "Five first occurences of zero probability: "
+    for (sequence, _) in [(w, p) for (w, p) in
              sorted(lines, key=lambda x: x[1], reverse=True) if p == 0][:5]:
-    print line
+        print sequence
