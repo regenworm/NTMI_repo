@@ -52,28 +52,26 @@ def n_grams_to_dictionary(n_grams):
 
 def conditional_probability(sequence, n_gram_dictionaries, n,
 	(method, lengths_or_frequencies)):
-
+	k = 5;
 	history = sequence[:sequence.rfind(' ')];
-	if not method == 'no' and n_gram_dictionaries[n][sequence] <= 5:
-		# In case smoothing method is set to add1
-		if method == 'add1':
-			return (
-				(n_gram_dictionaries[n][sequence] + 1) / 
-				(n_gram_dictionaries[n-1][history] + lengths_or_frequencies[n] 
-				+ 0.0)
-			)
-		elif method == 'gt':
-			# Threshold 
-			k = 5
-			c = n_gram_dictionaries[n][sequence]
-			N = lengths_or_frequencies;
-			if c == 0:	
-				return N[1] / (N[0] + 0.0);
-			elif c <= k:
-				numerator = ((c + 1)*(N[c+1] / (N[c] + 0.0))) - \
-					(c*( (k+1)*N[k+1] )/ (N[1] + 0.0))
-				denominator = 1 - ( ( (k+1) * N[k+1] ) / ( N[1] + 0.0) )
-				return numerator / (denominator + 0.0)
+	
+	# In case smoothing method is set to add1
+	if method == 'add1':
+		return (
+			(n_gram_dictionaries[n][sequence] + 1) / 
+			(n_gram_dictionaries[n-1][history] + lengths_or_frequencies[n] 
+			+ 0.0)
+		)
+	elif method == 'gt' and n_gram_dictionaries[n][sequence] <= k:
+		c = n_gram_dictionaries[n][sequence]
+		N = lengths_or_frequencies;
+		if c == 0:	
+			return N[1] / (N[0] + 0.0);
+		elif c <= k:
+			numerator = ((c + 1)*(N[c+1] / (N[c] + 0.0))) - \
+				(c*( (k+1)*N[k+1] )/ (N[1] + 0.0))
+			denominator = 1 - ( ( (k+1) * N[k+1] ) / ( N[1] + 0.0) )
+			return numerator / (denominator + 0.0)
 			
 	# No smoothing is done. 
 	if n_gram_dictionaries[n-1][history] == 0:
