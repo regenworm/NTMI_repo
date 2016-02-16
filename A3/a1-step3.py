@@ -11,16 +11,14 @@
 import sys, argparse, re
 from collections import defaultdict
 
-
 # Read n-grams from file per line
 def read_n_grams_per_line(file_handle, n):
-    # Split text in file by one or more occurrences of newline
+ 	# Split text in file by one or more occurrences of newline
     lines = re.split('[\n]+', file_handle.read())
     # Set pointer to begin of file.
     file_handle.seek(0)
     # Get all lines where number of words equals n
     return [line for line in lines if line.count(' ') == (n - 1)]
-
 
 # Replace with number of whitespaces
 
@@ -146,7 +144,7 @@ for i in range(1, n + 1):
 
 # Creating vocabulary count or n-gram frequencies
 if smoothing == 'add1':
-    smoothing = ('add1', [len(dictionary)
+    smoothing = ('add1', [len(dictionary) + 1 # Add count for [END]
                           for dictionary in n_gram_dictionaries])
 elif smoothing == 'gt':
     smoothing = ('gt', [sum(n_gram_dictionaries[n].values())] + \
@@ -157,11 +155,10 @@ elif smoothing == 'gt':
                  )
 
 # Computing probability for lines in test corpus.
-lines = [('[START] ' + line[:-1] + ' [END]',
-          sequence_probability(line, n, n_gram_dictionaries, smoothing)
-          )
-         for line in re.split('[\n]+', test_file.read())
-         ]
+lines = [(seq, sequence_probability(seq, n, n_gram_dictionaries, smoothing))
+         for seq in ['[START] ' + line + ' [END]' 
+		    for line in re.split('[\n]+', test_file.read()) ]
+        ]
 
 # Printing percentage of zero probabilities.
 print "Percentage of zero probabilities: " + str(round(
