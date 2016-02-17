@@ -11,17 +11,6 @@
 import sys, argparse, re
 from collections import defaultdict
 
-# Read n-grams from file per line
-def read_n_grams_per_line(file_handle, n):
- 	# Split text in file by one or more occurrences of newline
-    lines = re.split('[\n]+', file_handle.read())
-    # Set pointer to begin of file.
-    file_handle.seek(0)
-    # Get all lines where number of words equals n
-    return [line for line in lines if line.count(' ') == (n - 1)]
-
-# Replace with number of whitespaces
-
 # Read n-gram from file per paragraphs (number of newlines > 1)	
 def read_n_grams_per_paragraph(file_handle, n):
     # Normalize the number of newlines, so occurrences of more than two lines
@@ -41,7 +30,6 @@ def read_n_grams_per_paragraph(file_handle, n):
     l = len(words)
     return [' '.join(words[i:(i + n)]) for i in range(0, l) if l - i >= n]
 
-
 # Convert list of n-grams to dictionary containing number of occurrences.
 def n_grams_to_dictionary(n_grams):
     # Make dictionary which maps each unique occurrence of a n-gram to an
@@ -52,19 +40,22 @@ def n_grams_to_dictionary(n_grams):
     for n_gram in n_grams: dictionary[n_gram] += 1
     return dictionary
 
-
-def conditional_probability(sequence, n_gram_dictionaries, n,
-                            (method, lengths_or_frequencies)):
+# Compute conditional probability of sequence
+def conditional_probability(
+    sequence, n_gram_dictionaries, n, (method, lengths_or_frequencies)
+):
     k = 5
     history = sequence[:sequence.rfind(' ')]
 
-    # In case smoothing method is set to add1
+    # In case smoothing method is set to add1.
     if method == 'add1':
         return (
             (n_gram_dictionaries[n][sequence] + 1) /
             (n_gram_dictionaries[n - 1][history] + lengths_or_frequencies[n]
              + 0.0)
         )
+    # In case smoothing method is set to Good-Turing and frequency of n-gram are
+    # less or equal to k.
     elif method == 'gt' and n_gram_dictionaries[n][sequence] <= k:
         c = n_gram_dictionaries[n][sequence]
         N = lengths_or_frequencies
@@ -76,7 +67,8 @@ def conditional_probability(sequence, n_gram_dictionaries, n,
             denominator = 1 - (((k + 1) * N[k + 1]) / (N[1] + 0.0))
             return numerator / (denominator + 0.0)
 
-    # No smoothing is done.
+    # In case no smoothing method is set or when frequency of n-gram for 
+    # Good-Turing smoothing are greater than k.
     if n_gram_dictionaries[n - 1][history] == 0:
         return 0
     else:
@@ -107,7 +99,6 @@ def sequence_probability(sequence, n, n_gram_dictionaries, smoothing):
         )
 
     return probability
-
 
 # Process command line arguments
 parser = argparse.ArgumentParser(description='NTMI')
@@ -142,25 +133,32 @@ for i in range(1, n + 1):
         n_grams_to_dictionary(read_n_grams_per_paragraph(training_file, i))
     )
 
-# Creating vocabulary count or n-gram frequencies
+# Creating vocabulary count in case of add1 smoothing.
 if smoothing == 'add1':
-    smoothing = ('add1', [len(dictionary) + 1 # Add count for [END]
-                          for dictionary in n_gram_dictionaries])
+    smoothing = (
+		'add1', 
+		# Counting number of n-grams types in dictionary. Adding one for [END]
+		[len(dictionary) + 1 for dictionary in n_gram_dictionaries]
+	)
+# Creating n-gram frequencies in case of Good-Turing smoothing.
 elif smoothing == 'gt':
-    smoothing = ('gt', [sum(n_gram_dictionaries[n].values())] + \
-                 # Computing frequencies of n-grams. The first case is the total number
-                 # of n-grams (hence N).
-                 [len([i for i in n_gram_dictionaries[n].values() if i == frequency])
-                  for frequency in range(1, 7)]  # For range 1 to 6
-                 )
+    smoothing = (
+		'gt', 
+		[sum(n_gram_dictionaries[n].values())] + \
+		# Computing frequencies of n-grams. The first case is the total number
+        # of n-grams (hence N).
+        [len([i for i in n_gram_dictionaries[n].values() if i == frequency])
+            for frequency in range(1, 7) # For range 1 to 6
+        ]
+    )
 
 # Computing probability for lines in test corpus.
 lines = [(seq, sequence_probability(seq, n, n_gram_dictionaries, smoothing))
-         for seq in ['[START] ' + line + ' [END]' 
+        for seq in ['[START] ' + line + ' [END]' 
 		    for line in re.split('[\n]+', test_file.read()) ]
         ]
 
-# Printing percentage of zero probabilities.
+# Compute and print percentage of zero probabilities.
 zero = round(
 		(len([(w, p) for (w, p) in lines if p == 0]) / (len(lines) + 0.0))
     	* 100, 2)
