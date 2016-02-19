@@ -131,7 +131,7 @@ def conditional_probability(bi_gram, dictionaries):
         return 0
     else:
         return (dictionaries[1][bi_gram] /
-                (dictionaries[0][bi_gram] + 0.0))
+                (dictionaries[0][bi_gram[1]] + 0.0))
 
 
 # Process command line arguments
@@ -150,4 +150,4 @@ parameters = parser.parse_args(sys.argv[1:])
     parse_pos_file(parameters.training_set)
 )
 
-print conditional_probability(('to', 'TO'), lexical_dictionaries)
+print conditional_probability(('DT', 'NN'), language_dictionaries)
