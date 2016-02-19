@@ -39,12 +39,12 @@ tprobs = {
           }
 
 
-def viterbi(word_tag, transitional_dictionary, lexical_dictionary):
+def viterbi(data, language_dictionary, lexical_dictionary):
     layers = [[]]
     # Compute zeroth layer
     (word, current_states) = data[0]
     for current_state in current_states:
-        layers[0].append(tprobs[(current_state, word)])
+        layers[0].append(conditional_probability((word, current_state), lexical_dictionary))
     
     # Compute layers
     for t in range(1, len(data)):
