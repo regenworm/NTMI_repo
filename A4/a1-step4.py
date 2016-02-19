@@ -8,6 +8,9 @@
         Winand Renkema (10643478)
 '''
 
+import sys, argparse, re
+from collections import defaultdict
+
 data = [
         ('<s>', ['q1', 'q2']),
         ('x', ['q1', 'q2']),
@@ -72,4 +75,66 @@ def viterbi(word_tag, transitional_dictionary, lexical_dictionary):
     
     #[1,2,10,11].index(max([1,2,10,11]))
 
+# Read n-grams from file per line
+def parse_pos_file(file_handle):
+    sequences = [[]]
+    index = 0
+    # Read file per line
+    for line in file_handle.readlines():
+        # Remove unwanted characters from lines
+        line = re.sub('([^$\w]+/[^.\w\s]+)|([\[\]\n+])', '', line)
+        # Trim line
+        line = re.sub('(^\s+)|(\s+$)', '', line)
+        # Split line into chunks containing word/tag combinations
+        if len(line) > 0:
+            chunks = re.split('\s+', line)
+            
+            for chunk in chunks:
+                # When chunk matches end of line, continue on new line.
+                if re.match("[=]+|([\.]/[\.])", chunk):
+                    if len(sequences[index]) > 0:
+                        sequences.append([])
+                        index+=1
+                else:
+                    sequences[index].append(tuple(chunk.rsplit('/', 1)))
+    # Removing last element, if empty
+    if len(sequences[index]) == 0: del sequences[index]    
+    
+    return sequences
+
+# Convert list of sequences to dictionary containing word/tag tuples.
+def sequences_to_model_dictionaries(sequences):
+    # Make dictionary which maps each unique occurrence of a bi-gram to an
+    # integer.
+    language_dictionary = defaultdict(int)
+    lexical_dictionary = defaultdict(int)
+    
+    # For each found bi-gram, increment the corresponding integer of the
+    # bi-gram in the dictionary.    
+    for sequence in sequences:
+        tag_previous = 'START'
+        for (word, tag) in sequence:
+            lexical_dictionary[(word, tag)] += 1
+            language_dictionary[(tag_previous, tag)] += 1
+            tag_previous = tag
+        language_dictionary[(tag_previous, 'STOP')] += 1
+        
+    return (language_dictionary, lexical_dictionary)
+
+
+# Process command line arguments
+parser = argparse.ArgumentParser(description='NTMI')
+parser.add_argument('-training-set', action='store', dest='training_set',
+                    type=argparse.FileType('r'), required=True)
+parser.add_argument('-test-set', action='store', dest='test_set',
+                    type=argparse.FileType('r'), required=True)
+parser.add_argument('-test-set-predicted', action='store', dest='test_set_predicted',
+                    type=argparse.FileType('r'), required=False)
+parser.add_argument('-smoothing', action='store', dest='smoothing',
+                    choices=['yes', 'no'], default='no')
+parameters = parser.parse_args(sys.argv[1:])
+
+(language_dictionary, lexical_dictionary) = sequences_to_model_dictionaries(
+    parse_pos_file(parameters.training_set)
+)
 
