@@ -10,6 +10,7 @@
 
 import sys, argparse, re
 from collections import defaultdict
+from nltk.ccg import lexicon
 
 data = [
         ('<s>', ['q1', 'q2']),
@@ -106,7 +107,7 @@ def parse_pos_file(file_handle):
 def sequences_to_model_dictionaries(sequences):
     # Make dictionary which maps each unique occurrence of a bi-gram to an
     # integer.
-    language_dictionary = defaultdict(int)
+    language_dictionaries = (defaultdict(int), defaultdict(int))
     lexical_dictionary = defaultdict(int)
     
     # For each found bi-gram, increment the corresponding integer of the
@@ -115,11 +116,22 @@ def sequences_to_model_dictionaries(sequences):
         tag_previous = 'START'
         for (word, tag) in sequence:
             lexical_dictionary[(word, tag)] += 1
-            language_dictionary[(tag_previous, tag)] += 1
+            language_dictionaries[0][tag] += 1
+            language_dictionaries[1][(tag_previous, tag)] += 1
             tag_previous = tag
-        language_dictionary[(tag_previous, 'STOP')] += 1
+        language_dictionaries[1][(tag_previous, 'STOP')] += 1
         
-    return (language_dictionary, lexical_dictionary)
+    return (language_dictionaries, (language_dictionaries[0], lexical_dictionary))
+
+# Compute conditional probability of sequence
+def conditional_probability(bi_gram, dictionaries):
+    # In case no smoothing method is set or when frequency of n-gram for 
+    # Good-Turing smoothing are greater than k.
+    if dictionaries[0][bi_gram[1]] == 0:
+        return 0
+    else:
+        return (dictionaries[1][bi_gram] /
+                (dictionaries[0][bi_gram] + 0.0))
 
 
 # Process command line arguments
@@ -134,7 +146,8 @@ parser.add_argument('-smoothing', action='store', dest='smoothing',
                     choices=['yes', 'no'], default='no')
 parameters = parser.parse_args(sys.argv[1:])
 
-(language_dictionary, lexical_dictionary) = sequences_to_model_dictionaries(
+(language_dictionaries, lexical_dictionaries) = sequences_to_model_dictionaries(
     parse_pos_file(parameters.training_set)
 )
 
+print conditional_probability(('to', 'TO'), lexical_dictionaries)
