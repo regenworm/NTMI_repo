@@ -134,6 +134,7 @@ def conditional_probability(bi_gram, dictionaries):
                 (dictionaries[0][bi_gram[1]] + 0.0))
 
 
+
 # Process command line arguments
 parser = argparse.ArgumentParser(description='NTMI')
 parser.add_argument('-training-set', action='store', dest='training_set',
@@ -150,4 +151,13 @@ parameters = parser.parse_args(sys.argv[1:])
     parse_pos_file(parameters.training_set)
 )
 
-print conditional_probability(('DT', 'NN'), language_dictionaries)
+def sequence_possible_tags(sequence, lexical_dict):
+    data = []
+    for word in sequence:
+        tags = [pair[1] for pair in lexical_dict[1] if pair[0] == word]
+        data.append((word, tags))
+
+    return data
+
+# print conditional_probability(('DT', 'NN'), language_dictionaries)
+print sequence_possible_tags(['is', 'was'], lexical_dictionaries)
