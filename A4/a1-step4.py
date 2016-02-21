@@ -22,26 +22,27 @@ def parse_pos_file(file_handle):
         line = re.sub('([^$\w]+/[^.\w\s]+)|([\[\]\n+])', '', line)
         # Trim line
         line = re.sub('(^\s+)|(\s+$)', '', line)
-        # Split line into chunks containing word/tag combinations
+        # When line is not empty
         if len(line) > 0:
-            chunks = re.split('\s+', line)
-            
-            for chunk in chunks:
+            # Split line into chunks containing word/tag combinations            
+            for chunk in re.split('\s+', line):
                 # When chunk matches end of line, continue on new line.
                 if re.match('[=]+|(.+/[\.])', chunk):
+                    # When current sequence is not empty, append a new one.
                     if len(sequences[index]) > 0:
                         sequences.append([])
                         index+=1
                 else:
                     chunk = re.sub('\|.*$', '', chunk)
                     sequences[index].append(tuple(chunk.rsplit('/', 1)))
+    
     # Removing last element, if empty
     if len(sequences[index]) == 0: del sequences[index]    
     
     return sequences
 
 def viterbi(data, dictionaries, smoothing):
-    
+  
     layers = [[]]
     # Compute zeroth layer
     (word, current_states) = data[0]
@@ -143,12 +144,19 @@ def conditional_probability(model, bi_gram, dictionaries, smoothing):
             
     # In case no smoothing method is set or when frequency of n-gram for 
     # Good-Turing smoothing are greater than k.
-
     if dictionaries[0][bi_gram[1]] == 0: # When denominator is zero.
         return 0.0
     else:
         return c / (dictionaries[0][bi_gram[1]] + 0.0)
 
+def sequence_to_data(sequence, language_dictionaries):
+    data = []
+    data.append(('', ['START']))
+    for word in sequence:
+        data.append((word, language_dictionaries[0].keys()))
+
+    data.append(('', ['STOP']))
+    return data
 
 # Process command line arguments
 parser = argparse.ArgumentParser(description='NTMI')
@@ -163,16 +171,6 @@ parser.add_argument('-smoothing', action='store', dest='smoothing',
 parameters = parser.parse_args(sys.argv[1:])
 
 smoothing = parameters.smoothing
-
-def sequence_possible_tags(sequence, lexical_dict):
-    data = []
-    data.append(('', ['START']))
-    for word in sequence:
-        #tags = [pair[1] for pair in lexical_dict[1] if pair[0] == word]
-        data.append((word, language_dictionaries[0].keys()))
-
-    data.append(('', ['STOP']))
-    return data
 
 # Compute unigrams and bigrams from training set: index 0 = unigrams, 
 # 1 = bigrams
@@ -194,8 +192,7 @@ if smoothing == 'yes':
             lexical_dictionaries[2][tag] += 1
 
             
-    # Computing tags per word
-        # Computing number of occurences per tag for lexical model
+    # Computing number of occurences per tag for lexical model
     lexical_dictionaries.append(defaultdict(list))
     for (word, tag) in lexical_dictionaries[1].keys(): 
         lexical_dictionaries[3][word].append(tag)
@@ -208,10 +205,9 @@ total = 0
 for sequence in parse_pos_file(parameters.test_set):
     (word_sequence, tag_sequence) = zip(*sequence)
 
-   
     tag_sequence = ['START'] + list(tag_sequence) + ['STOP']
     tag_sequence_predicted = viterbi(
-        sequence_possible_tags(word_sequence, lexical_dictionaries),
+        sequence_to_data(word_sequence, lexical_dictionaries),
         (language_dictionaries, lexical_dictionaries),
         smoothing
     )
@@ -220,22 +216,20 @@ for sequence in parse_pos_file(parameters.test_set):
     
     for index in range(0, len(tag_sequence)):
         if (tag_sequence[index] == tag_sequence_predicted[index]): 
-            current += 1
-        
-    '''
+            current += 1       
+    
     file_handle.write('Word sequence:\t\t' + ', '.join(word_sequence) + '\n')
     file_handle.write('Tag sequence:\t\t' + ', '.join(tag_sequence) + '\n')
     file_handle.write('Predicted sequence:\t' + ', '.join(tag_sequence_predicted) + '\n')
     file_handle.write('Accuracy:\t\t')
     file_handle.write( str("%.2f" % ((current / (index + 1.0)) * 100)) + '%\n' )
     file_handle.write( '\n' )
-    '''
-    file_handle.write( str("%.2f" % ((current / (index + 1.0)))) + ' ' + str(len(word_sequence)) + '\n' )
+    
+    #file_handle.write( str("%.2f" % ((current / (index + 1.0)))) + ' ' + str(len(word_sequence)) + '\n' )
+    
     correct += current 
     total += index+1
-    
-
-        
+            
 file_handle.close()
 
 print 'Accuracy: ' + str(correct/(total + 0.0))
