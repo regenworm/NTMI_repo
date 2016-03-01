@@ -227,7 +227,7 @@ for sequence in parse_pos_file(parameters.test_set):
     file_handle.write( str("%.2f" % ((current / (index + 0.0)) * 100)) + '%\n' )
     file_handle.write( '\n' )
     
-    #file_handle.write( str("%.2f" % ((current / (index + 1.0)))) + ' ' + str(len(word_sequence)) + '\n' )
+    #file_handle.write( str("%.2f" % ((current / (index + 0.0)))) + ' ' + str(len(word_sequence)) + '\n' )
     
     correct += current 
     total += index+1
