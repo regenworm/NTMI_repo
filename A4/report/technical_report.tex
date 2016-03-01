@@ -1,0 +1,121 @@
+\documentclass[titlepage,a4paper, 10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{tikz, pgfplots}
+\usepackage{wrapfig}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{Technical Report}\\\vspace{20pt}Constructing a POS tagger\\\vspace{30pt}\Large{NLMI - Part A}}
+\author{Alex Khawalid (10634207)\\
+Wessel Klijnsma (10172432)\\
+Winand Renkema (10643478)\\
+}
+\date{\today}
+\begin{document}
+\maketitle
+
+\begin{tabularx}{\linewidth}{X p{0.8\linewidth} X}
+     &
+    \begin{center}
+    \textbf{Abstract}\\
+    \end{center}
+     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vulputate mi a libero luctus, ac maximus sem egestas. Pellentesque eget arcu hendrerit nisl pulvinar suscipit eu sit amet enim. In hac habitasse platea dictumst. Praesent volutpat massa massa, in eleifend dui mollis quis.
+     Maecenas vulputate tortor non nibh bibendum, in aliquet ligula fringilla. Ut ac mauris nibh. Sed nisl diam, dictum quis condimentum vitae, euismod a felis. Nunc porttitor libero enim, eu mollis dolor venenatis ac. Pellentesque maximus risus vitae dolor bibendum ultrices. Aliquam erat volutpat. Pellentesque semper ipsum eget mauris suscipit vestibulum. Nam tincidunt ipsum et metus consectetur ullamcorper. Aenean fringilla ex turpis, a rutrum risus consectetur vel.
+     &
+      
+\end{tabularx}
+
+\section{Introduction}
+% -Description of the problem area 
+% - Definition of your research question:
+% -- What kind of program will you build?
+% -- Explain why this would be interesting to explore
+
+
+\section{Approach}
+% Used method / approach: Give a brief description of how your program code is structured, which algorithms you use and explain why is it correct or better than any more common alternatives (if relevant). Also explain how you tested your program.
+
+\subsection{Parsing training and test corpus}
+\subsection{Constructing language and lexical model}
+\subsubsection{Language model}
+\subsubsection{Lexical model}
+\subsection{Smoothing language and lexical model}
+\subsubsection{Language model}
+\subsubsection{Lexical model}
+\subsection{Computing most probable POS sequence}
+
+\section{Results}
+\subsection{Accuracy of POS tagger}
+
+% What are the results of the tests you described at the used method / approach?
+
+\begin{tikzpicture}[scale=0.9]
+\begin{axis}[%
+	xlabel=Accuracy,
+	ylabel=Length,
+scatter/classes={%
+    a={mark=,draw=red}}]
+\addplot[
+	scatter, 
+	only marks,
+	mark size=0.5pt,
+    scatter src=explicit symbolic, draw=red]%
+table {nosmoothing.dat};
+\end{axis}
+\end{tikzpicture}
+\begin{tikzpicture}[scale=0.9]
+\begin{axis}[%
+	xlabel=Accuracy,
+	ylabel=Length,
+scatter/classes={%
+    a={mark=,draw=green}}]
+\addplot[
+	scatter, 
+	only marks,
+	mark size=0.5pt,
+    scatter src=explicit symbolic, draw=blue]%
+table {smoothing.dat};
+\end{axis}
+\end{tikzpicture}
+\newpage
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.6]
+    \begin{axis}[
+		width=400,
+    	xlabel=Accuracy,
+		ylabel=Number of sentences,
+        major x tick style = transparent,
+        ybar,
+        area legend,
+        ymin=-20,
+		ymax=600,
+        bar width=4pt,
+        xtick={0,10,19},
+	    xticklabels={$0.0$,$0.5$,$1.0$},
+        legend pos=north west
+    ]
+	\addplot table {nosmoothing_bar.dat};
+	\addlegendentry{Not smoothed}
+	\addplot table {smoothing_bar.dat};
+	\addlegendentry{Smoothed}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Accuracy without and with smoothing}
+\label{fig:smoothingaccuracy}
+\end{wrapfigure}
+
+In figure \ref{fig:smoothingaccuracy} one can see the dramatic result of smoothing.
+
+\section{Discussion}
+% What are your conclusions, given the results of your program? Refer to the research question you defined in your introduction.
+
+\end{document}

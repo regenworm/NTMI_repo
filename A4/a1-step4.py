@@ -127,8 +127,10 @@ def conditional_probability(model, bi_gram, dictionaries, smoothing):
             if dictionaries[0][tag] == 0:
                 return 0;
             else:
+              #  print (0.5)*(dictionaries[2][tag]/(dictionaries[0][tag]+ 0.0))
                 return (0.5)*(dictionaries[2][tag]/(dictionaries[0][tag]+ 0.0))
         else: 
+            #print 0.5/(dictionaries[0][tag] + 0.0)
             return 0.5/(dictionaries[0][tag] + 0.0)
         
     elif smoothing == 'yes' and model == 'language' and c <= k:
@@ -213,8 +215,8 @@ for sequence in parse_pos_file(parameters.test_set):
     )
     
     current = 0
-    
-    for index in range(0, len(tag_sequence)):
+        
+    for index in range(1, len(tag_sequence)-1): # Correction for START and STOP
         if (tag_sequence[index] == tag_sequence_predicted[index]): 
             current += 1       
     
@@ -222,7 +224,7 @@ for sequence in parse_pos_file(parameters.test_set):
     file_handle.write('Tag sequence:\t\t' + ', '.join(tag_sequence) + '\n')
     file_handle.write('Predicted sequence:\t' + ', '.join(tag_sequence_predicted) + '\n')
     file_handle.write('Accuracy:\t\t')
-    file_handle.write( str("%.2f" % ((current / (index + 1.0)) * 100)) + '%\n' )
+    file_handle.write( str("%.2f" % ((current / (index + 0.0)) * 100)) + '%\n' )
     file_handle.write( '\n' )
     
     #file_handle.write( str("%.2f" % ((current / (index + 1.0)))) + ' ' + str(len(word_sequence)) + '\n' )
