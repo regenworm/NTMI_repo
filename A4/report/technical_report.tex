@@ -1,5 +1,5 @@
 \documentclass[titlepage,a4paper, 10pt]{article}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=1.5in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -10,96 +10,174 @@
 \usepackage{tabularx}
 \usepackage{tikz, pgfplots}
 \usepackage{wrapfig}
-\setlength{\parindent}{0pt}
 
-\title{\textbf{Technical Report}\\\vspace{20pt}Constructing a POS tagger\\\vspace{30pt}\Large{NLMI - Part A}}
+\usepackage[font=footnotesize, labelfont={bf,bf}, margin=1cm]{caption}
+
+\title{\includegraphics[scale=0.2]{logo_uva.png}\vspace{20pt}\\\textbf{Technical Report}\\\vspace{20pt}Designing and implementing a POS tagger\\\vspace{30pt}\Large{NLMI - Part A}}
 \author{Alex Khawalid (10634207)\\
 Wessel Klijnsma (10172432)\\
 Winand Renkema (10643478)\\
 }
 \date{\today}
+
 \begin{document}
+
 \maketitle
 
-\begin{tabularx}{\linewidth}{X p{0.8\linewidth} X}
-     &
-    \begin{center}
+\noindent \begin{tabularx}{\linewidth}{X p{0.8\linewidth} X}
+&\begin{center}
     \textbf{Abstract}\\
     \end{center}
-     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vulputate mi a libero luctus, ac maximus sem egestas. Pellentesque eget arcu hendrerit nisl pulvinar suscipit eu sit amet enim. In hac habitasse platea dictumst. Praesent volutpat massa massa, in eleifend dui mollis quis.
-     Maecenas vulputate tortor non nibh bibendum, in aliquet ligula fringilla. Ut ac mauris nibh. Sed nisl diam, dictum quis condimentum vitae, euismod a felis. Nunc porttitor libero enim, eu mollis dolor venenatis ac. Pellentesque maximus risus vitae dolor bibendum ultrices. Aliquam erat volutpat. Pellentesque semper ipsum eget mauris suscipit vestibulum. Nam tincidunt ipsum et metus consectetur ullamcorper. Aenean fringilla ex turpis, a rutrum risus consectetur vel.
-     &
-      
+The course Natural Language Models and Interfaces aims to teach students about how to deal with the semantics of natural language processing and how to build natural language processing systems.
+This particular assignment focuses on designing and implementing a stochastic Part of Speech (POS) tagger. 
+A combination of a language and lexical model implemented using Viterbi provides a probability for word/tag sequences. 
+The use of Good Turing smoothing provides an effective way of dealing with unkowns.
+The model discussed in this report has an accuracy of approximately $80\%$ with smoothing. 
+& \\
 \end{tabularx}
+\vspace{10pt}
 
 \section{Introduction}
-% -Description of the problem area 
-% - Definition of your research question:
-% -- What kind of program will you build?
-% -- Explain why this would be interesting to explore
+The course Natural Language Models and Interfaces aims to teach students about how to deal with the semantics of natural language processing and how to build natural language processing systems. 
+This particular assignment focuses on designing and implementing a stochastic Part of Speech (POS) tagger.
 
+\subsection{Problem Area}
+Nowadays, Natural Language Processing is proving to be increasingly powerful and knows many applications like machine translation, automatic summary and automatic recommendation system.
+
+When trying to build such systems, structure and meaning has to be assigned to the written source of information.
+By determining the part-of-speech of a word, insight in the meaning of the text is gained.
+Therefore, the ability to determine POS tags of words, is a valuable capability for a NLP system to have.
+
+A POS tagger is a system which processes sentences and assigns the words in the sentence with tags corresponding to their part of speech.
+The system that is described in this report is a stochastic system, in contrast to ruled based systems.
+This report contains the design, implementation and analysis of the performance of a POS tagger.
+
+\subsection{Research question}
+The following question will be answered in this report:
+\begin{quote}
+How can one design and implement a stochastic part of speech tagger and what is its performance in means of accuracy?
+\end{quote}
 
 \section{Approach}
-% Used method / approach: Give a brief description of how your program code is structured, which algorithms you use and explain why is it correct or better than any more common alternatives (if relevant). Also explain how you tested your program.
 
-\subsection{Parsing training and test corpus}
-\subsection{Constructing language and lexical model}
-\subsubsection{Language model}
-\subsubsection{Lexical model}
-\subsection{Smoothing language and lexical model}
-\subsubsection{Language model}
-\subsubsection{Lexical model}
+\subsection{Hidden Markov model}
+The problem of finding the most probable sequence of tags given a sequence of words can be modelled by means of a Hidden Markov Model (HMM).
+A HMM consists of the following components: a set (hidden) states $T$, a set observations $W$, transition probabilities $P(t_i|t_{i-1})$ and emission probabilities $P(w_i|t_i)$. 
+In this specific case $t$ represent the possible POS tag and $w$ the observed word.
+The transition probabilities and emission probabilities are embodied as the language model and lexical model respectively.
+
+The most probable sequence of tags given the sequence of words is defined as:
+
+$$ P_{max}(o,t) = argmax_t \prod_{i = 1}^{n} P(t_i|t_{i-1})P(o_i | t_i) $$
+\subsection{Training the model}
+The program starts with processing data from the training corpus. 
+The training corpus contains a large amount of sentences, which consist of words that are paired with a part-of-speech tag.
+
+For the first step in finding $P_{max}(w,t)$, the model needs be trained on appropriate data.
+More specifically, the transition and emission probabilities need to be extracted from the training data.
+This is done by counting the occurrence of $(w_i, t_i)$  and $(t_i, t_{i-1})$ and normalising them. This means that for the language model the following is used: 
+$$ P(t_i|t_{i-1}) = \frac{Count(t_i, t_{i-1})}{Count(t_{i-1})} $$ 
+For the lexical model the following formula is used:
+$$ P(w_i, t_i) = \frac{Count(w_i, t_i)}{Count(t_i)}$$ 
+
 \subsection{Computing most probable POS sequence}
+Finding the most probable tag sequence given the sequence of words is done using the Viterbi algorithm. The Viterbi algorithm is a dynamic programming method that is able to find $P_{max}(w,t)$ efficiently.
+
+The Viterbi algorithm uses the following formula:
+$$v(j,t) = \max \limits^N_{i=1} v(i,t-1)\cdot a_{ij}\cdot b_j(o_t)$$
+
+The value $v(j,t)$ corresponds to the value $v$ of state $j$ at time $t$. 
+The time $t$ is the position in the sequence of observed words.
+The term $a_{ij}$ is the transition probability ($P(t_i|t_j)$ in this case) and $b_j(o_t)$ is the emission probability ($P(w_t | t_j)$ in this case. 
+
+As can be seen, it uses the maximum $v$ value of $t-1$ to determine the $v$ values at $t$. When the $v$ values at all $t$'s are calculated, it most probable tag $j_t$ is $max_j(v(j,t)$. Doing this for every $t$ (time) gives us $P_{max}(w,t)$.
+
+\subsection{Smoothing language and lexical model}
+
+Since a training corpus can only contain a limited number of words and tag, the possibility of finding an unknown word or tag exists. 
+This is a problem because it is best to be assigned a probability instead of zero.
+To prevent the occurrence of zero probabilities, smoothing is applied to the language and lexical model.
+
+\noindent For the language model Good-Turing smoothing is used with the following formula (where $k = 4$):
+
+$$r* = \frac{(r+1)\frac{n_{r+1}}{n_r}-r\frac{(k+1)n_{k+1}}{n_1}}{1-\frac{(k+1)n_{k+1}}{n_1}}$$
+
+\noindent For the lexical model smoothing is applied using the following formula:
+$$P(u|t)=\frac{n_1(t)}{n_0N(t)}$$
+
+The number of words which appeared once with tag $t$ is divided by the product of the number of unknown words and the total number of words (in this case $n_0 = 1$) which appeared with tag $t$.
+
+\section{Implementation}
+\subsection{Parsing the Training Set}
+The tagger starts by parsing uni-grams and bi-grams for the language and lexical model from the training set.
+The function \texttt{parse\_pos\_file} is called first. 
+It reads the file line by line while removing unwanted characters and splitting the words and tags from each other.
+The output is a list of sequences containing tuples of word/tag.
+
+Next the output from \texttt{parse\_pos\_file} goes as input in the \\
+\texttt{sequences\_to\_model\_dictionaries} function. 
+This function converts the sequences to dictionaries (hence hash tables) containing the counts of uni-grams and bi-grams.
+The sequences are used for outputting as a language and a lexical dictionary.
+
+\subsection{Smoothing}
+When smoothing is enabled, the conditional probabilities are computed according to the formulas given before.
+In the case smoothing is not enabled, the conditional probability will be computed by dividing the uni-grams through the bi-grams.
+This will then happen for the language as well as the lexical model. 
+
+\subsection{Computing Accuracy}
+The program reads every sentence from the test set into a sequence of word/tag tuples.
+To each sequence a \texttt{START} and \texttt{STOP} tag are added to respectively the beginning and ending.
+
+The sequences need to be in a different format before they can be passed to the \texttt{viterbi} function. This formatting is done by passing the sequence to \texttt{sequence\_to\_data}. 
+
+The \texttt{viterbi} function is then applied with the formatted data and a sequence of predicted tags is given as a result.
+It takes data (the sequences converted to a different format), dictionaries (the dictionaries gathered from the training corpus) and whether or not smoothing is applied.
+Afterwards the predicted tags are compared to the actual tags which were earlier read from the file. 
+The number of correct tags and the total number of tags are updated and when the program is finished the accuracy is displayed.
+% Brief description of code structure
+% Which algorithms used
+% Why is it better than alternatives(if relative)?
+% How was program tested?
 
 \section{Results}
-\subsection{Accuracy of POS tagger}
+\begin{wrapfigure}{r}{0.35\textwidth}
+\begin{center}
+\begin{tabular}{|l|c|}
+    \hline
+    \textit{Method} & \textit{Accuracy} \\
+    \hline
+    No smoothing    & 60.46\% \\
+    Smoothing       & 79.54\% \\
+    \hline
+\end{tabular}
+\end{center}
+\caption{Accuracy per method}
+\label{fig:smoothingaccuracytable}
+\end{wrapfigure}
 
-% What are the results of the tests you described at the used method / approach?
+To test the quality of the POS tagger, the accuracy has been calculated based on a test set containing annotated sentences.
+For each sentence in the test set, a tag sequence was predicted.
+After predicting each sequence, the result was compared with the tag sequence that was annotated in the test set.
+Based on this comparison an accuracy per sentence was calculated: The sum of correct predicted tags divided by the total number of tags.
+The overall accuracy was computed by taking the total number of correct predicted tags and dividing it by the total number of tags.
+It should be noted that for computing the accuracy, the \texttt{START} and \texttt{STOP} tag are not compared, due to the fact that they are not actually predicted by the tagger.
 
-\begin{tikzpicture}[scale=0.9]
-\begin{axis}[%
-	xlabel=Accuracy,
-	ylabel=Length,
-scatter/classes={%
-    a={mark=,draw=red}}]
-\addplot[
-	scatter, 
-	only marks,
-	mark size=0.5pt,
-    scatter src=explicit symbolic, draw=red]%
-table {nosmoothing.dat};
-\end{axis}
-\end{tikzpicture}
-\begin{tikzpicture}[scale=0.9]
-\begin{axis}[%
-	xlabel=Accuracy,
-	ylabel=Length,
-scatter/classes={%
-    a={mark=,draw=green}}]
-\addplot[
-	scatter, 
-	only marks,
-	mark size=0.5pt,
-    scatter src=explicit symbolic, draw=blue]%
-table {smoothing.dat};
-\end{axis}
-\end{tikzpicture}
-\newpage
-
-\begin{wrapfigure}{r}{0.5\textwidth}
-\begin{tikzpicture}[scale=0.6]
+\begin{wrapfigure}{c}{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
     \begin{axis}[
 		width=400,
+		x label style={at={(axis description cs:0.5,-.02)},anchor=north},
     	xlabel=Accuracy,
 		ylabel=Number of sentences,
         major x tick style = transparent,
         ybar,
         area legend,
         ymin=-20,
-		ymax=600,
+		ymax=550,
         bar width=4pt,
-        xtick={0,10,19},
-	    xticklabels={$0.0$,$0.5$,$1.0$},
+        xtick={0,9,19},
+	    xticklabels={$0.05$,$0.50$,$1.00$},
         legend pos=north west
     ]
 	\addplot table {nosmoothing_bar.dat};
@@ -110,12 +188,47 @@ table {smoothing.dat};
 \end{axis}
 \end{tikzpicture}
 \caption{Accuracy without and with smoothing}
-\label{fig:smoothingaccuracy}
+\label{fig:smoothingaccuracybar}
+\end{center}
 \end{wrapfigure}
 
-In figure \ref{fig:smoothingaccuracy} one can see the dramatic result of smoothing.
+The accuracy of the POS tagger with Viterbi but without smoothing is about $60\%$. A firm increase in accuracy is visible when smoothing is done on the models: it increases with about $20\%.$ to about $80\%$. In figure \ref{fig:smoothingaccuracytable} the actual values are shown.
+
+To illustrate the effect of smoothing on the accuracy, the accuracy per sentence has been divided into twenty classes of each $1/20$.
+Each sentence is assigned based on their accuracy, to one of these classes and the result is shown in figure \ref{fig:smoothingaccuracybar}.
+
+It is interesting to see that without smoothing a lot of sentences have an accuracy lower than $50\%$.
+When smoothing is applied, almost all these sentences move to the right side of the graph, hence have gotten a higher accuracy.
+Also a point of interest is the fact that a large number of very accurate sentences lose a part of their accuracy.
+This might be caused by the fact that the usage of smoothing creates sequences with a higher probability, via the Viterbi algorithm.
 
 \section{Discussion}
-% What are your conclusions, given the results of your program? Refer to the research question you defined in your introduction.
+Although the accuracy is high, about eighty percent, it might be useful to train the tagger with a larger set than the one used for this report.
+This might give a completely different accuracy than achieved before and therefore a more realistic evaluation of the quality of the tagger.
+
+Another point of interest is the fact that a number of predicted tag sequences lose accuracy because of smoothing, as pointed out in the result section.
+It is might be interesting to see whether this is caused by a too small training set or whether is has another cause (e.g. too aggressive smoothing).
+This also, might give a more realistic view on the quality of the tagger.
+
+\section{Conclusion}
+
+This report has shown how a stochastic POS tagger can be implemented using bi-grams, Hidden Markov Models and the Viterbi algorithm.
+The accuracy of the discussed POS tagger without smoothing was about $60\%$.
+By using Good-Turing smoothing, this increased by $20\%.$ to about $80\%$.
+Both accuracy values indicate the effectiveness of the tagger on its own and the importance of smoothing for POS tagging.
+
+In addition to the effectiveness of smoothing, the usage of the Viterbi algorithm made it  possible to achieve a relative short runtime of about several minutes instead of possibly hours due to a combinatoric explosion.
+
+\newpage
+\section*{Appendix}
+
+\subsection*{Usage}
+The program can be run using the following arguments.
+
+\begin{lstlisting}[breaklines]
+a1-step4.py -training-set TRAINING_SET -test-set TEST_SET 
+-test-set-predicted TEST_SET_PREDICTED -smoothing {yes,no}   
+\end{lstlisting}
+
 
 \end{document}

@@ -12,7 +12,7 @@ import sys, argparse, re
 from collections import defaultdict
 #from nltk.ccg import lexicon
 
-# Read n-grams from file per line
+# Read words and tags from file
 def parse_pos_file(file_handle):
     sequences = [[]]
     index = 0
@@ -41,6 +41,17 @@ def parse_pos_file(file_handle):
     
     return sequences
 
+# Converse regular sequence to input data for viterbi algorithm.
+def sequence_to_data(sequence, language_dictionaries):
+    data = []
+    data.append(('', ['START']))
+    for word in sequence:
+        data.append((word, language_dictionaries[0].keys()))
+
+    data.append(('', ['STOP']))
+    return data
+
+# Viterbi algorithm
 def viterbi(data, dictionaries, smoothing):
   
     layers = [[]]
@@ -89,7 +100,6 @@ def viterbi(data, dictionaries, smoothing):
     
     return path
 
-
 # Convert list of sequences to dictionary containing word/tag tuples.
 def sequences_to_model_dictionaries(sequences):
     # Make dictionary which maps each unique occurrence of a bi-gram to an
@@ -127,10 +137,8 @@ def conditional_probability(model, bi_gram, dictionaries, smoothing):
             if dictionaries[0][tag] == 0:
                 return 0;
             else:
-              #  print (0.5)*(dictionaries[2][tag]/(dictionaries[0][tag]+ 0.0))
                 return (0.5)*(dictionaries[2][tag]/(dictionaries[0][tag]+ 0.0))
         else: 
-            #print 0.5/(dictionaries[0][tag] + 0.0)
             return 0.5/(dictionaries[0][tag] + 0.0)
         
     elif smoothing == 'yes' and model == 'language' and c <= k:
@@ -150,15 +158,6 @@ def conditional_probability(model, bi_gram, dictionaries, smoothing):
         return 0.0
     else:
         return c / (dictionaries[0][bi_gram[1]] + 0.0)
-
-def sequence_to_data(sequence, language_dictionaries):
-    data = []
-    data.append(('', ['START']))
-    for word in sequence:
-        data.append((word, language_dictionaries[0].keys()))
-
-    data.append(('', ['STOP']))
-    return data
 
 # Process command line arguments
 parser = argparse.ArgumentParser(description='NTMI')
@@ -198,10 +197,10 @@ if smoothing == 'yes':
     lexical_dictionaries.append(defaultdict(list))
     for (word, tag) in lexical_dictionaries[1].keys(): 
         lexical_dictionaries[3][word].append(tag)
-
-        
+ 
 file_handle = parameters.test_set_predicted
 
+# Computing accuracy per sentence and overall accuracy
 correct = 0
 total = 0
 for sequence in parse_pos_file(parameters.test_set):
@@ -216,19 +215,18 @@ for sequence in parse_pos_file(parameters.test_set):
     
     current = 0
         
-    for index in range(1, len(tag_sequence)-1): # Correction for START and STOP
+    for index in range(1, len(tag_sequence)-1):
         if (tag_sequence[index] == tag_sequence_predicted[index]): 
             current += 1       
     
+    # Writing accuracy per sentence to output file
     file_handle.write('Word sequence:\t\t' + ', '.join(word_sequence) + '\n')
     file_handle.write('Tag sequence:\t\t' + ', '.join(tag_sequence) + '\n')
     file_handle.write('Predicted sequence:\t' + ', '.join(tag_sequence_predicted) + '\n')
     file_handle.write('Accuracy:\t\t')
     file_handle.write( str("%.2f" % ((current / (index + 0.0)) * 100)) + '%\n' )
     file_handle.write( '\n' )
-    
-    #file_handle.write( str("%.2f" % ((current / (index + 0.0)))) + ' ' + str(len(word_sequence)) + '\n' )
-    
+  
     correct += current 
     total += index+1
             
