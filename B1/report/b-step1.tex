@@ -1,11 +1,12 @@
 \documentclass[a4paper, 10pt]{article}
-\usepackage[margin=1in]{geometry}
+%\usepackage[margin=1in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{verbatim}
 \usepackage{subfig}
+\usepackage{listings}
 \setlength{\parindent}{0pt}
 
 \title{NTMI - Project Exercises - Part B}
@@ -19,8 +20,14 @@ Winand Renkema (10643478)\\
 \maketitle
 
 \section{Binarization}
+\subsection{Introduction}
+The goal of step 1 of part B is to binarize trees modifying the labels in such a way the the proces can be reversed. This is necessary for CKY algorithm which is used in PCFG based parsing. 
+
+\subsection{Method}
+The binarization program consists of 3 steps. First, a tree is convertedto  a list containing lists with (tag, word) tuples for each level in the tree. Then this list is binarized and intermediate nodes, with tags that allow for the process to be reversed, are added. Lastly, the binarized tree is converted to a string representation and written to a file.
 
 \subsection{Evaluation}
+The evaluation results of the PCFG parser with \texttt{validate20.txt} and \texttt{test20.txt} as input.
 
 \texttt{validate20.txt}
 \begin{verbatim}
@@ -34,5 +41,13 @@ Winand Renkema (10643478)\\
 [Average (up to 1034)]  P: 79.61 R: 73.88 F1: 76.63 EX: 20.69
 [Average]  P: 79.61 R: 73.88 F1: 76.63 EX: 20.69
 \end{verbatim}
+
+\subsection{Running the program}
+The binarization and PCFG parser can be run by invoking the script \texttt{test.bash}. 
+Alternatively, the binarization program can be run on its own by using a command of the following format:
+
+\begin{lstlisting}[breaklines]
+python b-step1.py -input INPUT_FILE -output OUTPUT_FILE
+\end{lstlisting}
 
 \end{document}
